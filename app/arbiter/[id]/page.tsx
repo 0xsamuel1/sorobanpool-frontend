@@ -8,7 +8,7 @@ import { ErrorExplainer } from '@/components/feedback/ErrorExplainer';
 import { useConfirm } from '@/components/ConfirmDialog';
 import { api } from '@/lib/api';
 import { useRequireAuth } from '@/lib/auth';
-import { outcomePreview, sha256Hex, type EvidenceItem, type OutcomeKind } from '@/lib/disputes';
+import { outcomePreview, sha256Hex, type EvidenceItem, type OutcomeInput, type OutcomeKind } from '@/lib/disputes';
 import { formatUsdc, toStroops } from '@/lib/format';
 import { runAction, type Prepared } from '@/lib/tx';
 import type { DisputeView } from '@/lib/types';
@@ -48,7 +48,8 @@ export default function ArbiterWorkspace() {
   const w = q.data!;
   const claimed = toStroops(w.dispute.claimedAmount);
   const price = w.pool?.finalUnitPrice ? toStroops(w.pool.finalUnitPrice) : 0n;
-  const preview = outcomePreview(claimed, price, { kind, units, bp: pct * 100 });
+  const optionInput = (k: OutcomeKind): OutcomeInput => (k === 'RefundMember' ? { kind: k, units } : k === 'Split' ? { kind: k, bp: pct * 100 } : { kind: k });
+  const preview = outcomePreview(claimed, price, optionInput(kind));
   const outcome = kind === 'RefundMember' ? { kind, units } : kind === 'Split' ? { kind, bp: pct * 100 } : { kind };
 
   async function copyHash() {
@@ -83,15 +84,21 @@ export default function ArbiterWorkspace() {
       </section>
       <fieldset className="space-y-2">
         <legend className="font-semibold">{t('outcome')}</legend>
-        {(['ReleaseToSupplier', 'RefundMember', 'Split', 'RefundPool'] as const).map((k) => (
-          <label key={k} className={`flex min-h-12 items-center gap-3 rounded-xl border p-3 ${kind === k ? 'border-emerald-800 bg-emerald-50' : 'border-neutral-300'}`}>
-            <input type="radio" name="outcome" checked={kind === k} onChange={() => setKind(k)} />{t(`outcomes.${k}`)}
-          </label>
-        ))}
+        {(['ReleaseToSupplier', 'RefundMember', 'Split', 'RefundPool'] as const).map((k) => {
+          const p = outcomePreview(claimed, price, optionInput(k));
+          return (
+            <label key={k} className={`flex min-h-12 items-center gap-3 rounded-xl border p-3 ${kind === k ? 'border-emerald-800 bg-emerald-50' : 'border-neutral-300'}`}>
+              <input type="radio" name="outcome" checked={kind === k} onChange={() => setKind(k)} />
+              <span className="flex-1">
+                {t(`outcomes.${k}`)}
+                <span className="block text-sm text-neutral-700" data-testid={`option-preview-${k}`}>{t('preview', { buyer: `${formatUsdc(p.buyer)} USD`, supplier: `${formatUsdc(p.supplier)} USD` })}</span>
+              </span>
+            </label>
+          );
+        })}
       </fieldset>
       {kind === 'RefundMember' && <><label htmlFor="u" className="block font-medium">{t('unitsToRefund')}</label><input id="u" inputMode="numeric" value={units} onChange={(e) => setUnits(Number(e.target.value.replace(/\D/g, '')) || 0)} className="h-12 w-24 rounded-lg border border-neutral-400 px-3 text-center text-lg" /></>}
       {kind === 'Split' && <><label htmlFor="p" className="block font-medium">{t('memberShare')}</label><input id="p" type="range" min={0} max={100} value={pct} onChange={(e) => setPct(Number(e.target.value))} className="w-full" /><p>{pct}%</p></>}
-      <p role="status" className="rounded-xl bg-neutral-100 p-3 text-sm" data-testid="payout-preview">{t('preview', { buyer: `${formatUsdc(preview.buyer)} USD`, supplier: `${formatUsdc(preview.supplier)} USD` })}</p>
       <label htmlFor="why" className="block font-medium">{t('reasoning')}</label>
       <textarea id="why" rows={4} value={reasoning} onChange={(e) => setReasoning(e.target.value)} aria-describedby="why-count why-hash" className="w-full rounded-lg border border-neutral-400 p-3 text-lg" />
       <p id="why-count" className="text-sm text-neutral-700">{t('chars', { count: reasoning.length })}</p>
@@ -102,6 +109,7 @@ export default function ArbiterWorkspace() {
           <button type="button" disabled={!hash} onClick={() => void copyHash()} className="min-h-12 rounded-lg border border-neutral-400 px-3 disabled:opacity-60">{copied ? t('copied') : t('copyHash')}</button>
         </div>
       </div>
+      <p role="status" className="rounded-xl bg-neutral-100 p-3 text-sm" data-testid="payout-preview">{t('preview', { buyer: `${formatUsdc(preview.buyer)} USD`, supplier: `${formatUsdc(preview.supplier)} USD` })}</p>
       <button type="button" disabled={busy || reasoning.trim().length < 10 || done} onClick={() => void resolve()} className="min-h-12 w-full rounded-xl bg-emerald-800 text-lg font-bold text-white disabled:opacity-60">{t('resolve')}</button>
       {done && <p role="status" className="rounded-xl bg-emerald-50 p-4 font-bold text-emerald-900">{t('resolved')}</p>}
       {error !== null && <ErrorExplainer error={error} />}
