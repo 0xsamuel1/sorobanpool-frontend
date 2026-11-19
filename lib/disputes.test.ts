@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { hoursLeft, nairaToUsdcStroops, outcomePreview } from './disputes';
+import { hoursLeft, nairaToUsdcStroops, outcomePreview, slaBreached, sortAndFilterQueue } from './disputes';
+import type { DisputeView } from './types';
 
 const A = 80_000_000n; // 8 USDC claimed
 const P = 8_000_000n; // 0.8 USDC per unit
@@ -31,5 +32,32 @@ describe('helpers', () => {
   it('previews USDC for naira prices, rounding down like the server', () => {
     expect(nairaToUsdcStroops(1500n, 1500)).toBe(10_000_000n);
     expect(nairaToUsdcStroops(1n, 3)).toBe(3_333_333n);
+  });
+});
+
+const row = (id: string, claimedAmount: string, msToSla: number, reasonCode?: string): DisputeView =>
+  ({ id, poolId: 'p', opener: 'o', state: 'OPEN', claimedAmount, openedAt: '', slaDueAt: '', msToSla, reasonCode }) as DisputeView;
+
+describe('arbiter queue', () => {
+  const queue = [row('1', '5', 7_200_000, 'Damaged'), row('2', '20', -3_600_000, 'Short'), row('3', '12', 1_000, 'Damaged')];
+
+  it('flags breached SLAs', () => {
+    expect(slaBreached({ msToSla: -1 })).toBe(true);
+    expect(slaBreached({ msToSla: 0 })).toBe(true);
+    expect(slaBreached({ msToSla: 1 })).toBe(false);
+  });
+  it('sorts by SLA with the most overdue and soonest first', () => {
+    expect(sortAndFilterQueue(queue, { sort: 'sla' }).map((d) => d.id)).toEqual(['2', '3', '1']);
+  });
+  it('sorts by value, largest claim first', () => {
+    expect(sortAndFilterQueue(queue, { sort: 'value' }).map((d) => d.id)).toEqual(['2', '3', '1']);
+  });
+  it('filters by reason code and keeps the sort', () => {
+    expect(sortAndFilterQueue(queue, { sort: 'sla', reason: 'Damaged' }).map((d) => d.id)).toEqual(['3', '1']);
+    expect(sortAndFilterQueue(queue, { sort: 'sla', reason: 'Other' })).toEqual([]);
+  });
+  it('does not mutate the input order', () => {
+    sortAndFilterQueue(queue, { sort: 'value' });
+    expect(queue.map((d) => d.id)).toEqual(['1', '2', '3']);
   });
 });
