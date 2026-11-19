@@ -4,18 +4,12 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { ErrorExplainer } from '@/components/feedback/ErrorExplainer';
 import { api } from '@/lib/api';
-import { useRequireAuth } from '@/lib/auth';
-import { useSession } from '@/lib/store';
 import type { DisputeView } from '@/lib/types';
 
+/** The arbiter layout checks the role before this renders. */
 export default function ArbiterQueue() {
   const t = useTranslations('arbiter');
-  const common = useTranslations('common');
-  const { ready } = useRequireAuth();
-  const isArbiter = useSession((s) => s.me?.roles.includes('ARBITER'));
-  const q = useQuery({ queryKey: ['arbiter', 'queue'], queryFn: () => api<DisputeView[]>('/arbiter/queue'), enabled: ready && !!isArbiter, refetchInterval: 15_000 });
-  if (!ready) return <p>{common('loading')}</p>;
-  if (!isArbiter) return <p role="status" className="rounded-xl bg-amber-50 p-4">{t('notArbiter')}</p>;
+  const q = useQuery({ queryKey: ['arbiter', 'queue'], queryFn: () => api<DisputeView[]>('/arbiter/queue'), refetchInterval: 15_000 });
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">{t('title')}</h1>

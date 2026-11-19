@@ -3,20 +3,28 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
-import { useRequireAuth } from '@/lib/auth';
-import { useSession } from '@/lib/store';
+import { SessionGuard } from '@/components/SessionGuard';
+import { useRoleGuard } from '@/lib/auth';
 
-const TABS = [['', 'risk'], ['/suppliers', 'suppliers'], ['/users', 'users'], ['/offers', 'offers'], ['/disputes', 'disputes'], ['/audit', 'audit']] as const;
+const TABS = [
+  ['', 'risk'],
+  ['/suppliers', 'suppliers'],
+  ['/users', 'users'],
+  ['/offers', 'offers'],
+  ['/disputes', 'disputes'],
+  ['/params', 'params'],
+  ['/categories', 'categories'],
+  ['/audit', 'audit'],
+] as const;
 
 /** Gate and sub-navigation for the admin console. The server enforces ADMIN on every endpoint; this is only the front door. */
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const t = useTranslations('admin');
   const common = useTranslations('common');
   const path = usePathname();
-  const { ready } = useRequireAuth();
-  const isAdmin = useSession((s) => s.me?.roles.includes('ADMIN'));
+  const { ready, allowed } = useRoleGuard('ADMIN');
   if (!ready) return <p>{common('loading')}</p>;
-  if (!isAdmin) return <p role="status" className="rounded-xl bg-amber-50 p-4">{t('notAdmin')}</p>;
+  if (!allowed) return <p role="status" className="rounded-xl bg-amber-50 p-4">{t('notAdmin')}</p>;
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">{t('title')}</h1>
@@ -28,6 +36,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         })}
       </nav>
       {children}
+      <SessionGuard />
     </div>
   );
 }

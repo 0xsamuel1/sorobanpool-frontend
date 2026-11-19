@@ -1,10 +1,13 @@
 'use client';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
+import { useState } from 'react';
 import { ErrorExplainer } from '@/components/feedback/ErrorExplainer';
 import { api } from '@/lib/api';
 import { formatUsdc, percent, shortAddress } from '@/lib/format';
 import type { RiskOverview } from '@/lib/types';
+
+const WINDOWS = [7, 30, 90] as const;
 
 function Stat({ label, value, alert }: { label: string; value: string; alert?: boolean }) {
   return (
@@ -18,13 +21,31 @@ function Stat({ label, value, alert }: { label: string; value: string; alert?: b
 export default function Risk() {
   const t = useTranslations('admin');
   const r = useTranslations('admin.risk');
-  const q = useQuery({ queryKey: ['admin', 'risk'], queryFn: () => api<RiskOverview>('/admin/risk/overview'), refetchInterval: 30_000 });
+  const [days, setDays] = useState<(typeof WINDOWS)[number]>(7);
+  const q = useQuery({
+    queryKey: ['admin', 'risk', days],
+    queryFn: () => api<RiskOverview>(`/admin/risk/overview?window=${days}`),
+    refetchInterval: 30_000,
+  });
   if (q.error) return <ErrorExplainer error={q.error} onRetry={() => void q.refetch()} />;
   const o = q.data;
   if (!o) return null;
   const has = (k: string) => o.flags.some((f) => f.kind === k);
   return (
     <div className="space-y-5">
+      <div role="group" aria-label={r('window')} className="flex flex-wrap gap-2">
+        {WINDOWS.map((d) => (
+          <button
+            key={d}
+            type="button"
+            aria-pressed={days === d}
+            onClick={() => setDays(d)}
+            className={`min-h-12 rounded-lg border px-3 font-medium ${days === d ? 'border-emerald-800 bg-emerald-50 text-emerald-900' : 'border-neutral-300'}`}
+          >
+            {r('days', { days: d })}
+          </button>
+        ))}
+      </div>
       <div className="grid grid-cols-2 gap-3">
         <Stat label={r('gmv')} value={`${formatUsdc(o.gmv)} USD`} />
         <Stat label={r('escrow')} value={`${formatUsdc(o.escrowHeld)} USD`} />

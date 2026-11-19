@@ -385,18 +385,22 @@
       "users": "Users",
       "offers": "Offers",
       "disputes": "Disputes",
-      "audit": "Audit log"
+      "audit": "Audit log",
+      "params": "Parameters",
+      "categories": "Categories"
     },
     "risk": {
       "gmv": "Delivered value (GMV)",
       "escrow": "Held in escrow",
-      "failure": "Failure rate (7 days)",
-      "disputeRate": "Dispute rate (7 days)",
+      "failure": "Failure rate",
+      "disputeRate": "Dispute rate",
       "flags": "Needs attention",
       "noFlags": "Nothing flagged.",
       "suppliers": "Suppliers by dispute rate",
       "pairs": "Organizer and supplier pairs",
-      "pools": "{count} pools"
+      "pools": "{count} pools",
+      "window": "Time window",
+      "days": "Last {days} days"
     },
     "kyb": {
       "pending": "Applications waiting",
@@ -417,7 +421,43 @@
       "takedown": "Take down",
       "takenDown": "Taken down (new pools only)"
     },
-    "empty": "Nothing here yet."
+    "empty": "Nothing here yet.",
+    "params": {
+      "help": "Change a parameter within its hard cap. The change is prepared as a transaction that signers must approve on chain.",
+      "range": "Allowed: {min} to {max} {unit}",
+      "error": {
+        "NOT_A_NUMBER": "Enter a number.",
+        "BELOW_CAP": "Below the minimum of {min} {unit}.",
+        "ABOVE_CAP": "Above the maximum of {max} {unit}."
+      },
+      "diff": "Changes",
+      "noChanges": "No changes yet.",
+      "change": "{from} → {to} {unit}",
+      "prepare": "Prepare change",
+      "preparing": "Preparing…"
+    },
+    "categories": {
+      "help": "Only enabled categories can be used for new pools. Each change is prepared as a transaction that signers must approve on chain.",
+      "empty": "No categories yet.",
+      "perishable": "Perishable",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "enable": "Enable",
+      "disable": "Disable",
+      "mismatch": "Differs from the on-chain list.",
+      "confirmTitle": "Change {name}?",
+      "confirmBody": "Nothing changes until the signers approve and submit the transaction.",
+      "cancel": "Cancel",
+      "confirm": "Confirm",
+      "xdrFor": "Transaction for {name}"
+    },
+    "xdr": {
+      "label": "Transaction XDR",
+      "help": "Give this to each signer. They load it in their wallet and approve it.",
+      "download": "Download .xdr",
+      "copy": "Copy XDR",
+      "copied": "Copied."
+    }
   },
   "statement": {
     "title": "Payout statement",
@@ -471,5 +511,11 @@
     "built": "Built on Stellar",
     "testnet": "Test version: practice money only, no real payments.",
     "source": "Open source"
+  },
+  "session": {
+    "idleTitle": "Still there?",
+    "idleBody": "You will be signed out in {seconds} seconds because you have not been active.",
+    "stay": "Stay signed in",
+    "signOut": "Sign out now"
   }
 }
