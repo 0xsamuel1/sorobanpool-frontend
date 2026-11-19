@@ -353,6 +353,10 @@
     "window": "You fit report problem till confirmation time end."
   },
   "arbiter": {
+  "hashLabel": "Note fingerprint (SHA-256)",
+  "copyHash": "Copy",
+  "copied": "Copied",
+  "chars": "{count} characters",
   "timeline": "Evidence timeline",
   "view": "View",
   "download": "Download",
