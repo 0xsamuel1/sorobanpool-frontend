@@ -353,6 +353,14 @@
     "window": "You can report a problem until the confirmation time ends."
   },
   "arbiter": {
+  "sortBy": "Sort by",
+  "sortSla": "Time left (soonest first)",
+  "sortValue": "Amount (largest first)",
+  "reason": "Reason",
+  "reasonAll": "All reasons",
+  "reasons": {"Short": "Short delivery", "WrongItem": "Wrong item", "Damaged": "Damaged", "Quality": "Quality", "NotDelivered": "Not delivered", "Other": "Other"},
+  "breachedBadge": "SLA breached",
+  "noMatch": "No disputes match these filters.",
     "title": "Disputes to decide",
     "empty": "No open disputes.",
     "sla": "Decide within {hours}h",
