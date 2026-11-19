@@ -48,6 +48,8 @@ export interface PoolView {
   offer: OfferView | null;
   trustMessage: string;
   myCommitment?: { units: number; paid: string; pickedUp: boolean } | null;
+  /** Hours the supplier has to accept after the pool fills. Defaults to 24 when absent. */
+  acceptWindowHours?: number;
 }
 
 export interface PoolCard {
@@ -99,6 +101,10 @@ export interface RiskOverview {
 export interface StatementLine { poolId: string; product: string; settledAt: string; unitsDelivered: number; gross: string; platformFee: string; organizerFee: string; net: string }
 export interface Statement { lines: StatementLine[]; total: { gross: string; platformFee: string; organizerFee: string; net: string } }
 
+export interface BondInfo {
+  total: string;
+  reserved: string;
+}
 
 /** A product category and whether the chain allows it. */
 export interface CategoryRow {
