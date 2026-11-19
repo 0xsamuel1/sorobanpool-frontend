@@ -96,3 +96,14 @@ export interface RiskOverview {
 
 export interface StatementLine { poolId: string; product: string; settledAt: string; unitsDelivered: number; gross: string; platformFee: string; organizerFee: string; net: string }
 export interface Statement { lines: StatementLine[]; total: { gross: string; platformFee: string; organizerFee: string; net: string } }
+
+
+/** A product category and whether the chain allows it. */
+export interface CategoryRow {
+  id: string;
+  name: string;
+  perishable: boolean;
+  enabled: boolean;
+  /** The on-chain allow-list entry, or null when the chain has no entry for this category yet. */
+  onChain: boolean | null;
+}

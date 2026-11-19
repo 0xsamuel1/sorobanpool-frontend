@@ -385,18 +385,22 @@
       "users": "Users",
       "offers": "Offers",
       "disputes": "Disputes",
-      "audit": "Audit log"
+      "audit": "Audit log",
+      "params": "Parameters",
+      "categories": "Categories"
     },
     "risk": {
       "gmv": "Value wey dem deliver (GMV)",
       "escrow": "Wey dey escrow",
-      "failure": "Failure rate (7 days)",
-      "disputeRate": "Dispute rate (7 days)",
+      "failure": "Failure rate",
+      "disputeRate": "Dispute rate",
       "flags": "Need attention",
       "noFlags": "Nothing dey flag.",
       "suppliers": "Suppliers by dispute rate",
       "pairs": "Organizer and supplier pairs",
-      "pools": "{count} pools"
+      "pools": "{count} pools",
+      "window": "Time window",
+      "days": "Last {days} days"
     },
     "kyb": {
       "pending": "Applications wey dey wait",
@@ -417,7 +421,43 @@
       "takedown": "Take down",
       "takenDown": "Dem don take am down (new pools only)"
     },
-    "empty": "Nothing dey here yet."
+    "empty": "Nothing dey here yet.",
+    "params": {
+      "help": "Change one parameter inside im hard cap. Di change go dey prepared as transaction wey signers must approve for chain.",
+      "range": "E fit be {min} to {max} {unit}",
+      "error": {
+        "NOT_A_NUMBER": "Put number.",
+        "BELOW_CAP": "E no fit below {min} {unit}.",
+        "ABOVE_CAP": "E no fit pass {max} {unit}."
+      },
+      "diff": "Wetin dey change",
+      "noChanges": "Nothing dey change yet.",
+      "change": "{from} → {to} {unit}",
+      "prepare": "Prepare di change",
+      "preparing": "Dey prepare…"
+    },
+    "categories": {
+      "help": "Na only enabled categories fit dey used for new pools. Each change dey prepared as transaction wey signers must approve for chain.",
+      "empty": "No categories yet.",
+      "perishable": "Perishable",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "enable": "Enable",
+      "disable": "Disable",
+      "mismatch": "E no match di on-chain list.",
+      "confirmTitle": "Change {name}?",
+      "confirmBody": "Nothing go change until di signers approve and submit di transaction.",
+      "cancel": "Cancel",
+      "confirm": "Confirm",
+      "xdrFor": "Transaction for {name}"
+    },
+    "xdr": {
+      "label": "Transaction XDR",
+      "help": "Give am to each signer. Dem go load am for dem wallet and approve.",
+      "download": "Download .xdr",
+      "copy": "Copy XDR",
+      "copied": "Copied."
+    }
   },
   "statement": {
     "title": "Payout statement",
@@ -471,5 +511,11 @@
     "built": "Built on Stellar",
     "testnet": "Test version: na practice money, no real payment.",
     "source": "Open source"
+  },
+  "session": {
+    "idleTitle": "You still dey?",
+    "idleBody": "You go sign out for {seconds} seconds because you no dey active.",
+    "stay": "Stay signed in",
+    "signOut": "Sign out now"
   }
 }
