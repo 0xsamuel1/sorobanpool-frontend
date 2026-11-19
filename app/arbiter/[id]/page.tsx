@@ -3,11 +3,12 @@ import { useQuery } from '@tanstack/react-query';
 import { useParams, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { EvidenceGallery } from '@/components/evidence/EvidenceGallery';
 import { ErrorExplainer } from '@/components/feedback/ErrorExplainer';
 import { useConfirm } from '@/components/ConfirmDialog';
 import { api } from '@/lib/api';
 import { useRequireAuth } from '@/lib/auth';
-import { outcomePreview, type OutcomeKind } from '@/lib/disputes';
+import { outcomePreview, type EvidenceItem, type OutcomeKind } from '@/lib/disputes';
 import { formatUsdc, toStroops } from '@/lib/format';
 import { runAction, type Prepared } from '@/lib/tx';
 import type { DisputeView } from '@/lib/types';
@@ -15,17 +16,10 @@ import type { DisputeView } from '@/lib/types';
 interface Workspace {
   dispute: DisputeView;
   pool: { id: string; state: string; totalUnits: number; finalUnitPrice: string | null } | null;
-  evidence: { id: string; kind: string; mime: string; createdAt: string }[];
+  evidence: EvidenceItem[];
 }
 
-function EvidenceLink({ id }: { id: string }) {
-  const [url, setUrl] = useState<string | null>(null);
-  const t = useTranslations('arbiter');
-  return url ? <a href={`${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000'}${url}`} target="_blank" rel="noopener noreferrer" className="underline">{t('evidence')} ↗</a>
-    : <button type="button" onClick={async () => setUrl((await api<{ url: string }>(`/evidence/${id}/url`)).url)} className="min-h-12 rounded-lg border border-neutral-400 px-3">{t('evidence')}</button>;
-}
-
-/** Evidence, a payout preview that matches the contract's maths, a reasoning note (hashed on-chain), and a signed decision. */
+/** Evidence timeline, a payout preview that matches the contract's maths, a reasoning note (hashed on-chain), and a signed decision. */
 export default function ArbiterWorkspace() {
   const { id } = useParams<{ id: string }>();
   const t = useTranslations('arbiter');
@@ -66,8 +60,8 @@ export default function ArbiterWorkspace() {
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">#{w.dispute.id}</h1>
       <p><span className="text-sm text-neutral-700">{t('claimed')}: </span><strong>{w.dispute.claimedAmount} USD</strong></p>
-      <section aria-labelledby="ev-h"><h2 id="ev-h" className="mb-2 font-semibold">{t('evidence')}</h2>
-        {w.evidence.length === 0 ? <p className="text-neutral-700">{t('noEvidence')}</p> : <ul className="space-y-2">{w.evidence.map((e) => <li key={e.id}><EvidenceLink id={e.id} /> <span className="text-xs text-neutral-700">{e.kind}</span></li>)}</ul>}
+      <section aria-labelledby="ev-h" className="space-y-2"><h2 id="ev-h" className="font-semibold">{t('evidence')}</h2>
+        <EvidenceGallery items={w.evidence} />
       </section>
       <fieldset className="space-y-2">
         <legend className="font-semibold">{t('outcome')}</legend>
