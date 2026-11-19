@@ -2,13 +2,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { useParams, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { EvidenceGallery } from '@/components/evidence/EvidenceGallery';
 import { ErrorExplainer } from '@/components/feedback/ErrorExplainer';
 import { useConfirm } from '@/components/ConfirmDialog';
 import { api } from '@/lib/api';
 import { useRequireAuth } from '@/lib/auth';
-import { outcomePreview, type EvidenceItem, type OutcomeKind } from '@/lib/disputes';
+import { outcomePreview, sha256Hex, type EvidenceItem, type OutcomeKind } from '@/lib/disputes';
 import { formatUsdc, toStroops } from '@/lib/format';
 import { runAction, type Prepared } from '@/lib/tx';
 import type { DisputeView } from '@/lib/types';
@@ -35,6 +35,14 @@ export default function ArbiterWorkspace() {
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<unknown>(null);
+  const [hash, setHash] = useState('');
+  const [copied, setCopied] = useState(false);
+  useEffect(() => {
+    let live = true;
+    if (!reasoning) setHash('');
+    else void sha256Hex(reasoning).then((h) => { if (live) setHash(h); });
+    return () => { live = false; };
+  }, [reasoning]);
   if (!ready || q.isLoading) return <p>{common('loading')}</p>;
   if (q.error) return <ErrorExplainer error={q.error} onRetry={() => void q.refetch()} />;
   const w = q.data!;
@@ -43,11 +51,21 @@ export default function ArbiterWorkspace() {
   const preview = outcomePreview(claimed, price, { kind, units, bp: pct * 100 });
   const outcome = kind === 'RefundMember' ? { kind, units } : kind === 'Split' ? { kind, bp: pct * 100 } : { kind };
 
+  async function copyHash() {
+    try {
+      await navigator.clipboard.writeText(hash);
+      setCopied(true);
+    } catch {
+      setCopied(false);
+    }
+  }
+
   async function resolve() {
     setBusy(true);
     setError(null);
     try {
-      await runAction(() => api<Prepared>(`/arbiter/disputes/${id}/resolve/prepare`, { body: { outcome, reasoning } }), ask);
+      const reasoningHash = await sha256Hex(reasoning);
+      await runAction(() => api<Prepared>(`/arbiter/disputes/${id}/resolve/prepare`, { body: { outcome, reasoning, reasoningHash } }), ask);
       setDone(true);
       setTimeout(() => router.replace('/arbiter'), 2000);
     } catch (e) {
@@ -75,7 +93,15 @@ export default function ArbiterWorkspace() {
       {kind === 'Split' && <><label htmlFor="p" className="block font-medium">{t('memberShare')}</label><input id="p" type="range" min={0} max={100} value={pct} onChange={(e) => setPct(Number(e.target.value))} className="w-full" /><p>{pct}%</p></>}
       <p role="status" className="rounded-xl bg-neutral-100 p-3 text-sm" data-testid="payout-preview">{t('preview', { buyer: `${formatUsdc(preview.buyer)} USD`, supplier: `${formatUsdc(preview.supplier)} USD` })}</p>
       <label htmlFor="why" className="block font-medium">{t('reasoning')}</label>
-      <textarea id="why" rows={4} value={reasoning} onChange={(e) => setReasoning(e.target.value)} className="w-full rounded-lg border border-neutral-400 p-3 text-lg" />
+      <textarea id="why" rows={4} value={reasoning} onChange={(e) => setReasoning(e.target.value)} aria-describedby="why-count why-hash" className="w-full rounded-lg border border-neutral-400 p-3 text-lg" />
+      <p id="why-count" className="text-sm text-neutral-700">{t('chars', { count: reasoning.length })}</p>
+      <div id="why-hash" className="space-y-1">
+        <p className="text-sm font-medium">{t('hashLabel')}</p>
+        <div className="flex flex-wrap items-center gap-2">
+          <code data-testid="reasoning-hash" className="break-all rounded bg-neutral-100 p-2 text-xs">{hash || '-'}</code>
+          <button type="button" disabled={!hash} onClick={() => void copyHash()} className="min-h-12 rounded-lg border border-neutral-400 px-3 disabled:opacity-60">{copied ? t('copied') : t('copyHash')}</button>
+        </div>
+      </div>
       <button type="button" disabled={busy || reasoning.trim().length < 10 || done} onClick={() => void resolve()} className="min-h-12 w-full rounded-xl bg-emerald-800 text-lg font-bold text-white disabled:opacity-60">{t('resolve')}</button>
       {done && <p role="status" className="rounded-xl bg-emerald-50 p-4 font-bold text-emerald-900">{t('resolved')}</p>}
       {error !== null && <ErrorExplainer error={error} />}
