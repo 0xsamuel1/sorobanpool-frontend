@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { hoursLeft, nairaToUsdcStroops, outcomePreview } from './disputes';
+import { hoursLeft, nairaToUsdcStroops, outcomePreview, sha256Hex, slaBreached, sortAndFilterQueue, type OutcomeInput } from './disputes';
+import type { DisputeView } from './types';
 
 const A = 80_000_000n; // 8 USDC claimed
 const P = 8_000_000n; // 0.8 USDC per unit
@@ -22,6 +23,34 @@ describe('outcomePreview', () => {
   });
 });
 
+describe('outcome totals', () => {
+  const cases: OutcomeInput[] = [
+    { kind: 'ReleaseToSupplier' },
+    { kind: 'RefundMember', units: 3 },
+    { kind: 'RefundMember', units: 50 },
+    { kind: 'Split', bp: 0 },
+    { kind: 'Split', bp: 5000 },
+    { kind: 'Split', bp: 10_000 },
+    { kind: 'RefundPool' },
+  ];
+  it('always adds up to the claimed amount for every outcome', () => {
+    for (const c of cases) {
+      const r = outcomePreview(A, P, c);
+      expect(r.buyer + r.supplier).toBe(A);
+    }
+  });
+  it('gives a 50% split an even share', () => {
+    expect(outcomePreview(A, P, { kind: 'Split', bp: 5000 })).toEqual({ buyer: 40_000_000n, supplier: 40_000_000n });
+  });
+});
+
+describe('sha256Hex', () => {
+  it('matches the standard SHA-256 test vectors', async () => {
+    expect(await sha256Hex('')).toBe('e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855');
+    expect(await sha256Hex('abc')).toBe('ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad');
+  });
+});
+
 describe('helpers', () => {
   it('counts hours to the SLA and stops at zero', () => {
     const now = Date.UTC(2026, 9, 5, 10);
@@ -31,5 +60,32 @@ describe('helpers', () => {
   it('previews USDC for naira prices, rounding down like the server', () => {
     expect(nairaToUsdcStroops(1500n, 1500)).toBe(10_000_000n);
     expect(nairaToUsdcStroops(1n, 3)).toBe(3_333_333n);
+  });
+});
+
+const row = (id: string, claimedAmount: string, msToSla: number, reasonCode?: string): DisputeView =>
+  ({ id, poolId: 'p', opener: 'o', state: 'OPEN', claimedAmount, openedAt: '', slaDueAt: '', msToSla, reasonCode }) as DisputeView;
+
+describe('arbiter queue', () => {
+  const queue = [row('1', '5', 7_200_000, 'Damaged'), row('2', '20', -3_600_000, 'Short'), row('3', '12', 1_000, 'Damaged')];
+
+  it('flags breached SLAs', () => {
+    expect(slaBreached({ msToSla: -1 })).toBe(true);
+    expect(slaBreached({ msToSla: 0 })).toBe(true);
+    expect(slaBreached({ msToSla: 1 })).toBe(false);
+  });
+  it('sorts by SLA with the most overdue and soonest first', () => {
+    expect(sortAndFilterQueue(queue, { sort: 'sla' }).map((d) => d.id)).toEqual(['2', '3', '1']);
+  });
+  it('sorts by value, largest claim first', () => {
+    expect(sortAndFilterQueue(queue, { sort: 'value' }).map((d) => d.id)).toEqual(['2', '3', '1']);
+  });
+  it('filters by reason code and keeps the sort', () => {
+    expect(sortAndFilterQueue(queue, { sort: 'sla', reason: 'Damaged' }).map((d) => d.id)).toEqual(['3', '1']);
+    expect(sortAndFilterQueue(queue, { sort: 'sla', reason: 'Other' })).toEqual([]);
+  });
+  it('does not mutate the input order', () => {
+    sortAndFilterQueue(queue, { sort: 'value' });
+    expect(queue.map((d) => d.id)).toEqual(['1', '2', '3']);
   });
 });

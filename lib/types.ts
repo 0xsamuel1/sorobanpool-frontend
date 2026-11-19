@@ -75,6 +75,8 @@ export interface DisputeView {
   openedAt: string;
   slaDueAt: string;
   msToSla?: number;
+  /** Why the buyer opened the dispute (one of the report reasons). */
+  reasonCode?: string;
 }
 
 export interface SupplierProfile {
