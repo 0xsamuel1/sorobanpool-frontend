@@ -353,6 +353,13 @@
     "window": "You fit report problem till confirmation time end."
   },
   "arbiter": {
+  "timeline": "Evidence timeline",
+  "view": "View",
+  "download": "Download",
+  "linkFailed": "We no fit open this file.",
+  "tryAgain": "Try again",
+  "evidenceAlt": "{kind} evidence",
+  "parties": {"opener": "Buyer", "supplier": "Supplier", "organizer": "Organizer"},
   "sortBy": "Sort by",
   "sortSla": "Time wey remain (wey soon first)",
   "sortValue": "Amount (wey big first)",
