@@ -74,3 +74,9 @@ export interface EvidenceItem {
 export function evidenceTimeline<T extends EvidenceItem>(items: readonly T[]): T[] {
   return [...items].sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt) || a.id.localeCompare(b.id));
 }
+
+/** SHA-256 of the reasoning note as lowercase hex. This fingerprint is what goes on-chain with the decision. */
+export async function sha256Hex(text: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('');
+}
