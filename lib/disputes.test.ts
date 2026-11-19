@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { hoursLeft, nairaToUsdcStroops, outcomePreview, slaBreached, sortAndFilterQueue } from './disputes';
+import { hoursLeft, nairaToUsdcStroops, outcomePreview, sha256Hex, slaBreached, sortAndFilterQueue, type OutcomeInput } from './disputes';
 import type { DisputeView } from './types';
 
 const A = 80_000_000n; // 8 USDC claimed
@@ -20,6 +20,34 @@ describe('outcomePreview', () => {
     expect(r.buyer + r.supplier).toBe(10n);
     expect(r.buyer).toBe(3n);
     expect(outcomePreview(A, P, { kind: 'Split', bp: 99_999 }).buyer).toBe(A); // clamped to 100%
+  });
+});
+
+describe('outcome totals', () => {
+  const cases: OutcomeInput[] = [
+    { kind: 'ReleaseToSupplier' },
+    { kind: 'RefundMember', units: 3 },
+    { kind: 'RefundMember', units: 50 },
+    { kind: 'Split', bp: 0 },
+    { kind: 'Split', bp: 5000 },
+    { kind: 'Split', bp: 10_000 },
+    { kind: 'RefundPool' },
+  ];
+  it('always adds up to the claimed amount for every outcome', () => {
+    for (const c of cases) {
+      const r = outcomePreview(A, P, c);
+      expect(r.buyer + r.supplier).toBe(A);
+    }
+  });
+  it('gives a 50% split an even share', () => {
+    expect(outcomePreview(A, P, { kind: 'Split', bp: 5000 })).toEqual({ buyer: 40_000_000n, supplier: 40_000_000n });
+  });
+});
+
+describe('sha256Hex', () => {
+  it('matches the standard SHA-256 test vectors', async () => {
+    expect(await sha256Hex('')).toBe('e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855');
+    expect(await sha256Hex('abc')).toBe('ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad');
   });
 });
 
