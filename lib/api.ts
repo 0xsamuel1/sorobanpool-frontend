@@ -83,3 +83,8 @@ export async function api<T = unknown>(path: string, opts: { method?: string; bo
   }
   return json as T;
 }
+
+// Named exports for statement and bond (issues #125, #126)
+export { type Statement, type BondInfo } from './types';
+export const getStatement = () => api<import('./types').Statement>('/suppliers/statement');
+export const getBond = () => api<import('./types').BondInfo>('/bonds/me');
