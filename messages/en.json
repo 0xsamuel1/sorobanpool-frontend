@@ -353,6 +353,13 @@
     "window": "You can report a problem until the confirmation time ends."
   },
   "arbiter": {
+  "timeline": "Evidence timeline",
+  "view": "View",
+  "download": "Download",
+  "linkFailed": "This file could not be opened.",
+  "tryAgain": "Try again",
+  "evidenceAlt": "{kind} evidence",
+  "parties": {"opener": "Buyer", "supplier": "Supplier", "organizer": "Organizer"},
   "sortBy": "Sort by",
   "sortSla": "Time left (soonest first)",
   "sortValue": "Amount (largest first)",
