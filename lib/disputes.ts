@@ -60,3 +60,17 @@ export function sortAndFilterQueue(items: readonly DisputeView[], o: { sort: Que
   }
   return rows.sort((a, b) => (a.msToSla ?? 0) - (b.msToSla ?? 0));
 }
+
+/** One item of dispute evidence. `party` says whose submission it is (opener, supplier or organizer). */
+export interface EvidenceItem {
+  id: string;
+  kind: string;
+  mime: string;
+  createdAt: string;
+  party?: 'opener' | 'supplier' | 'organizer';
+}
+
+/** One chronological list across all parties. Items with the same time keep a stable order by id. */
+export function evidenceTimeline<T extends EvidenceItem>(items: readonly T[]): T[] {
+  return [...items].sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt) || a.id.localeCompare(b.id));
+}
