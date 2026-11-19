@@ -4,8 +4,22 @@ updates:
     directory: /
     schedule: { interval: weekly }
     groups:
+      # Specific groups come first so each dependency lands in the group that names it.
+      # Next and its ESLint config move together; a mismatch fails the build.
+      next:
+        applies-to: version-updates
+        patterns: ["next", "eslint-config-next", "@next/*"]
+      # The Stellar SDK changes transaction and XDR handling, so it is reviewed as one unit.
+      stellar:
+        applies-to: version-updates
+        patterns: ["@stellar/*"]
+      # Test runners and their libraries are upgraded together.
+      testing:
+        applies-to: version-updates
+        patterns: ["@testing-library/*", "@playwright/test", "@axe-core/*", "vitest", "@vitest/*", "jsdom"]
       # One PR per week for routine dev-tooling bumps instead of one per package.
       dev-tooling:
+        applies-to: version-updates
         dependency-type: development
         update-types: [minor, patch]
     ignore:

@@ -6,7 +6,7 @@ import { addVirtualAuthenticator, Client, throttle } from './helpers';
  * connection. The virtual authenticator stands in for the phone's fingerprint/face; every signature is a real
  * WebAuthn assertion that the wallet contract verifies on testnet.
  */
-test('trader onboarding (5.1)', async ({ page, context }) => {
+test('trader onboarding (5.1) @smoke', async ({ page, context }) => {
   test.setTimeout(240_000);
   await addVirtualAuthenticator(context, page);
   await throttle(page, 'fast3g');

@@ -1,0 +1,60 @@
+name: e2e-nightly
+# Runs the @smoke subset in three browsers each night so passkey and layout
+# differences show up without slowing every PR. Trigger it by hand from the
+# Actions tab with "Run workflow".
+on:
+  schedule:
+    - cron: "37 3 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    name: smoke (${{ matrix.project }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [mobile, firefox, webkit]
+    steps:
+      - uses: actions/checkout@v7
+      # The Playwright config starts the backend from ../sorobanpool-backend.
+      - name: Check out the backend
+        uses: actions/checkout@v7
+        with:
+          repository: SorobanPool/sorobanpool-backend
+          path: sorobanpool-backend
+      - uses: pnpm/action-setup@v6   # version comes from package.json packageManager
+      - uses: actions/setup-node@v7
+        with: { node-version: 24, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - name: Install backend dependencies and build it
+        working-directory: sorobanpool-backend
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
+          pnpm build
+      - run: pnpm exec playwright install --with-deps chromium firefox webkit
+      # The app must be built against the dev API the tests call (see playwright.config.ts).
+      - name: Build the app
+        run: pnpm build
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:3100
+          NEXT_PUBLIC_DEPLOYMENTS: '{"usdc":"CAAQCAIBAEAQCAIBAEAQCAIBAEAQCAIBAEAQCAIBAEAQC526","contracts":{}}'
+      - name: Run @smoke tests
+        run: pnpm exec playwright test --project=${{ matrix.project }} --grep @smoke
+        env:
+          SPONSOR_SECRET: ${{ secrets.SPONSOR_SECRET }}
+      - name: Upload traces and report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-${{ matrix.project }}
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 14

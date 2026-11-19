@@ -16,7 +16,13 @@ export default defineConfig({
   reporter: [['list']],
   // Without an action timeout a missing element waits for the whole test timeout (20 minutes).
   use: { baseURL: WEB, trace: 'retain-on-failure', screenshot: 'only-on-failure', actionTimeout: 30_000, navigationTimeout: 60_000 },
-  projects: [{ name: 'mobile', use: { ...devices['Pixel 5'] } }],
+  // Run with `--project=<name>`. The nightly workflow runs the @smoke subset on all three.
+  projects: [
+    { name: 'mobile', use: { ...devices['Pixel 5'] } },
+    // Firefox at the same phone viewport as the mobile project, so layout differences show up.
+    { name: 'firefox', use: { ...devices['Desktop Firefox'], viewport: devices['Pixel 5'].viewport } },
+    { name: 'webkit', use: { ...devices['iPhone 13'] } },
+  ],
   webServer: [
     {
       command: 'node dist/dev/dev-server.js',

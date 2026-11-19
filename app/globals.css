@@ -4,6 +4,11 @@
  * Light theme by default: it reads best in sunlight on a phone (brief 8.3).
  * System fonts keep the first load small on 3G (ADR 0002); no web font is downloaded.
  */
+/*
+ * Design tokens. The conventions that use them (type scale, spacing, tap
+ * targets, components) are in docs/design-system.md. Change a value here and
+ * check the contrast tests still pass.
+ */
 :root {
   --background: #f6f8f6;
   --foreground: #14201a;
